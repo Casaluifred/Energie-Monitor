@@ -21,51 +21,51 @@ TAMC_GT911 ts = TAMC_GT911(TOUCH_SDA, TOUCH_SCL, TOUCH_INT, TOUCH_RST, screenWid
 // 1 = mit Display, 0 = nur Serieller Monitor (zum Testen)
 #define USE_DISPLAY 1
 
+// ---------------------------------------------------------------
+// Display & Standby Einstellungen
+// ---------------------------------------------------------------
+bool displayEnabled = true;     // Globaler Schalter (für spätere MQTT Integration)
+bool autoStandbyActive = true;  // Steuert, ob das Display nach 5 Min. abdunkelt (Z..z Button steuert dies)
+bool isScreenOn = true;         // Aktueller Zustand der Hintergrundbeleuchtung
+
+// Display-Beleuchtung nach dieser Zeit ohne Berührung automatisch ausschalten (ms)
+#define STANDBY_MS         300000UL
+
 // Fehlersuche beim Zucken des Displays:
-//   0 = normaler Betrieb
-//   1 = Netzwerkabfragen laufen, aber die Anzeige wird NICHT aktualisiert
-//   2 = keine Netzwerkabfragen, die Anzeige wird jeden Zyklus mit Testwerten aktualisiert
 #define TEST_MODE 0
 
-// Weitere Schalter zur Fehlersuche (jeweils nur einen auf 1 setzen):
-//   TEST_NO_WIFI  = 1: WLAN, Abfragen und Zeitabgleich komplett aus (Anzeige bleibt statisch)
-//   TEST_NO_TOUCH = 1: Touchscreen wird nicht gestartet (Standby per Berührung entfällt)
-//   WIFI_SLEEP    = 1: WLAN-Energiesparmodus an (Funkmodul schläft zwischen den Paketen)
+// Weitere Schalter zur Fehlersuche:
 #define TEST_NO_WIFI  0
 #define TEST_NO_TOUCH 0
 #define WIFI_SLEEP    0
 
-// 1 = Shelly in Emmering abfragen, 0 = überspringen (z. B. solange er abgeschaltet ist)
-#define ENABLE_EMMERING 0
+// 1 = Shelly in Emmering abfragen, 0 = überspringen
+#define ENABLE_EMMERING 1
 
 // ---------------------------------------------------------------
-// PV-Messung
-// IP eines Tasmota-Zählers direkt am Balkonkraftwerk (z. B. Sonoff POWR316),
-// oder NULL = PV-Leistung aus der Phase des Shelly berechnen (negative Leistung = PV liefert).
-// (Diese IPs kannst Du auch nach secrets.h verschieben.)
+// Zeitzonen & PV-Messung
 // ---------------------------------------------------------------
-const char * ipPvCincu    = "192.168.177.248";
-const char * ipPvEmmering = NULL;
+// Zeitzonen inkl. automatischer Sommer-/Winterzeit-Umstellung nach EU-Regeln
+#define TZ_EMMERING "CET-1CEST,M3.5.0/2,M10.5.0/3" // UTC+1 / UTC+2 (Umstellung 2:00 -> 3:00)
+#define TZ_CINCU    "EET-2EEST,M3.5.0/3,M10.5.0/4" // UTC+2 / UTC+3 (Umstellung 3:00 -> 4:00)
 
-// Phase, an der das Balkonkraftwerk hängt (nur relevant, wenn ipPv... = NULL): 0 = A, 1 = B, 2 = C
-#define PV_PHASE_EMMERING 1
-#define PV_PHASE_CINCU    1
-
-// Zeitzone für die Tageswechsel (Deutschland, mit Sommerzeit) und Zeitserver
-#define TIMEZONE_TZ   "CET-1CEST,M3.5.0,M10.5.0/3"
 #define NTP_SERVER_1  "pool.ntp.org"
 #define NTP_SERVER_2  "fritz.box"
 
+const char * ipPvCincu    = "192.168.177.248";
+const char * ipPvEmmering = "192.168.178.248";
+
+// Phase, an der das Balkonkraftwerk hängt
+#define PV_PHASE_EMMERING 1
+#define PV_PHASE_CINCU    1
+
 // Statistik: Messlücken länger als dieser Wert (Sekunden) werden nicht hochgerechnet
 #define STATS_MAX_GAP_S    60
-// Tageswerte alle 10 Minuten im Flash sichern (und bei jedem Tageswechsel)
+// Tageswerte alle 10 Minuten im Flash sichern
 #define STATS_SAVE_MS      600000UL
 
-// Wartezeit auf die Antwort der Geräte (ms). Verbindungsaufbau: 5 s
+// Wartezeit auf die Antwort der Geräte (ms).
 #define HTTP_READ_TIMEOUT_MS 8000
-
-// Display-Beleuchtung nach dieser Zeit ohne Berührung ausschalten (ms)
-#define STANDBY_MS         300000UL
 
 #define TP_RST 1
 #define LCD_BL 2
@@ -73,22 +73,20 @@ const char * ipPvEmmering = NULL;
 // ---------------------------------------------------------------
 // Design: Farben (0xRRGGBB), Schriften und Maße
 // ---------------------------------------------------------------
-#define COL_BG      0x06080B   // Bildschirmhintergrund (dunkel, damit sich die Karten abheben)
-#define COL_CARD    0x232B38   // Karte oben (bzw. einfarbig, wenn CARD_GRADIENT 0)
-#define COL_CARD_BOTTOM 0x12171E   // Karte unten (nur mit Farbverlauf)
-#define COL_BORDER  0x3A465C   // Rahmen der Karten
+#define COL_BG      0x06080B   
+#define COL_CARD    0x232B38   
+#define COL_CARD_BOTTOM 0x12171E   
+#define COL_BORDER  0x3A465C   
 #define COL_GRID    0x262D36
-#define COL_TRACK   0x2A3342   // leere Fläche hinter den Tagesbalken
+#define COL_TRACK   0x2A3342   
 #define COL_TEXT    0xFFFFFF
-#define COL_MUTED   0x8B949E   // graue Nebentexte
-#define COL_BLUE    0x4C9AFF   // Netzbezug
-#define COL_GREEN   0x3DDC84   // PV / Einspeisung / online
-#define COL_SUN     0xFFC107   // Sonnen-Symbol
-#define COL_OFF     0x6E7681   // offline / keine Daten
-#define COL_ICONBG  0x1B2A41   // Kreis hinter dem Haus-Symbol
+#define COL_MUTED   0x8B949E   
+#define COL_BLUE    0x4C9AFF   
+#define COL_GREEN   0x3DDC84   
+#define COL_SUN     0xFFC107   
+#define COL_OFF     0x6E7681   
+#define COL_ICONBG  0x1B2A41   
 
-// Bei Nulleinspeisung pendelt der Netzwert um 0 W. Innerhalb dieser Toleranz (in Watt)
-// wird er weiß mit "Ausgeglichen" angezeigt statt blau/grün.
 #define GRID_DEADBAND_W 3
 
 #define FONT_BIG    (&lv_font_montserrat_48)
@@ -98,10 +96,9 @@ const char * ipPvEmmering = NULL;
 #define CARD_H      456
 #define CARD_PAD    20
 #define CARD_BORDER 2
-#define CONTENT_W   (CARD_W - 2 * CARD_PAD - 2 * CARD_BORDER)   // 332
-#define CONTENT_H   (CARD_H - 2 * CARD_PAD - 2 * CARD_BORDER)   // 412
+#define CONTENT_W   (CARD_W - 2 * CARD_PAD - 2 * CARD_BORDER)   
+#define CONTENT_H   (CARD_H - 2 * CARD_PAD - 2 * CARD_BORDER)   
 
-// 1 = Farbverlauf in den Karten, 0 = einfarbig (bei Streifen im Verlauf auf 0 setzen)
 #define CARD_GRADIENT 1
 
 // Minimaler nativer I2C-Treiber für den Waveshare CH422G IO-Expander
@@ -110,20 +107,18 @@ class MiniCH422G {
     uint8_t out_state = 0;
   public:
     void init() {
-        Wire.begin(8, 9); // SDA = 8, SCL = 9 beim Waveshare 4.3
+        Wire.begin(8, 9);
     }
     void begin() {
-        Wire.beginTransmission(0x24); // CH422G System Parameter Register
-        Wire.write(0x01);             // Aktiviere Output-Pins
+        Wire.beginTransmission(0x24); 
+        Wire.write(0x01);             
         Wire.endTransmission();
     }
-    void multiPinMode(uint32_t pin, uint8_t mode) {
-        // Modus wird beim CH422G global in begin() gesetzt
-    }
+    void multiPinMode(uint32_t pin, uint8_t mode) {}
     void multiDigitalWrite(uint32_t pin, uint8_t val) {
         if (val) out_state |= (1 << pin);
         else     out_state &= ~(1 << pin);
-        Wire.beginTransmission(0x38); // CH422G Output Register
+        Wire.beginTransmission(0x38); 
         Wire.write(out_state);
         Wire.endTransmission();
     }
@@ -132,38 +127,33 @@ class MiniCH422G {
 MiniCH422G *expander = new MiniCH422G();
 
 // ---------------------------------------------------------------
-// Datenstrukturen (müssen vor der ersten Funktion stehen)
+// Datenstrukturen
 // ---------------------------------------------------------------
 
-// Messwerte eines Shelly Pro 3EM
 struct ShellyData {
-    float total    = NAN;                 // total_act_power: Summe aller Phasen (Netzbezug)
-    float phase[3] = { NAN, NAN, NAN };   // a_/b_/c_act_power; negativ = Einspeisung (z. B. Balkonkraftwerk)
+    float total    = NAN;                 
+    float phase[3] = { NAN, NAN, NAN };   
 };
 
-// Messwerte der PV-Anlage
 struct PvData {
-    float power    = NAN;   // aktuelle PV-Leistung in W (>= 0)
-    float todayKWh = NAN;   // Tagesenergie des Zählers in kWh (nur bei Tasmota; sonst NAN)
+    float power    = NAN;   
+    float todayKWh = NAN;   
 };
 
-// Ein Tag der Statistik
 struct DayRec {
-    uint32_t date;    // JJJJMMTT, 0 = kein Eintrag
-    float pvWh;       // erzeugte PV-Energie
-    float impWh;      // Netzbezug
-    float expWh;      // Einspeisung ins Netz
+    uint32_t date;    
+    float pvWh;       
+    float impWh;      
+    float expWh;      
 };
 
 #define STATS_MAGIC 0x45464D31u
 
-// Wird im Flash gespeichert
 struct StoredStats {
     uint32_t magic;
-    DayRec day[7];    // [0] = heute, [1] = gestern, ...
+    DayRec day[7];    
 };
 
-// Statistik eines Standorts (gespeicherter Teil + Laufzeitzustand)
 struct SiteStats {
     StoredStats st = {};
     const char * nvsKey = "";
@@ -179,19 +169,18 @@ struct SiteStats {
     bool  dirty = false;
 };
 
-// Alle Bedienelemente einer Karte
 struct Card {
-    lv_obj_t * dot = NULL;          // Status-Punkt (grün = Daten ok)
-    lv_obj_t * value = NULL;        // große Zahl (Netzbezug)
-    lv_obj_t * caption = NULL;      // "Netzbezug" / "Einspeisung"
-    lv_obj_t * pvValue = NULL;      // aktuelle PV-Leistung
-    lv_obj_t * bar = NULL;          // Balken Netz/PV-Anteil (aktuell)
+    lv_obj_t * dot = NULL;          
+    lv_obj_t * value = NULL;        
+    lv_obj_t * caption = NULL;      
+    lv_obj_t * pvValue = NULL;      
+    lv_obj_t * bar = NULL;          
     lv_obj_t * barLeft = NULL;
     lv_obj_t * barRight = NULL;
-    lv_obj_t * lblToday = NULL;     // "Heute"
-    lv_obj_t * lblShare = NULL;     // "PV-Anteil 23 %"
-    lv_obj_t * lblPvKwh = NULL;     // "PV 0,09 kWh"
-    lv_obj_t * lblGridKwh = NULL;   // "Netz 0,41 kWh"
+    lv_obj_t * lblToday = NULL;     
+    lv_obj_t * lblShare = NULL;     
+    lv_obj_t * lblPvKwh = NULL;     
+    lv_obj_t * lblGridKwh = NULL;   
     lv_obj_t * dayBar[7] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
     lv_obj_t * dayLbl[7] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 };
@@ -204,12 +193,29 @@ SiteStats statsCincu;
 const char * WEEKDAY[7] = { "So", "Mo", "Di", "Mi", "Do", "Fr", "Sa" };
 
 unsigned long lastUpdate = 0;
-const unsigned long updateInterval = 2000;   // ms; bei schwachem WLAN/VPN nicht unter 2000 gehen
+const unsigned long updateInterval = 2000;   
 
 // ---------------------------------------------------------------
-// WLAN-Verbindung mit Diagnose
-// Zahlen in eckigen Klammern = WiFi.status():
-//   1 = Netz nicht gefunden, 4 = Anmeldung fehlgeschlagen (Passwort?), 6 = getrennt/Versuch läuft
+// Zeitzonen-Funktionen
+// ---------------------------------------------------------------
+
+bool time_valid() {
+    return time(nullptr) > 1700000000L;   
+}
+
+// Holt die korrekt berechnete lokale Zeit für den jeweiligen Standort
+struct tm get_local_time(const char* tz) {
+    setenv("TZ", tz, 1);
+    tzset();
+    time_t now;
+    time(&now);
+    struct tm ti;
+    localtime_r(&now, &ti);
+    return ti;
+}
+
+// ---------------------------------------------------------------
+// WLAN-Verbindung
 // ---------------------------------------------------------------
 void connectWifi() {
     WiFi.mode(WIFI_STA);
@@ -247,8 +253,6 @@ void connectWifi() {
 // ---------------------------------------------------------------
 // Shelly Pro 3EM abfragen
 // ---------------------------------------------------------------
-
-// Ein einzelner Abruf. Gibt true zurück, wenn gültige Daten gelesen wurden.
 bool fetchShellyOnce(const char* ipAddress, int &httpCode, ShellyData &out) {
     WiFiClient client;
     HTTPClient http;
@@ -258,16 +262,13 @@ bool fetchShellyOnce(const char* ipAddress, int &httpCode, ShellyData &out) {
 
     http.addHeader("User-Agent", "ESP32-Client");
     http.addHeader("Connection", "close");
-    http.setConnectTimeout(5000);   // bei schwachem WLAN/VPN darf ein verlorenes SYN neu gesendet werden
-    http.setTimeout(HTTP_READ_TIMEOUT_MS);   // Antwort abwarten
+    http.setConnectTimeout(5000);   
+    http.setTimeout(HTTP_READ_TIMEOUT_MS);   
 
     httpCode = http.GET();
     bool ok = false;
 
     if (httpCode == HTTP_CODE_OK) {
-        String payload = http.getString();
-
-        // Nur die benötigten Felder einlesen (spart Speicher)
         JsonDocument filter;
         filter["total_act_power"] = true;
         filter["a_act_power"] = true;
@@ -275,7 +276,8 @@ bool fetchShellyOnce(const char* ipAddress, int &httpCode, ShellyData &out) {
         filter["c_act_power"] = true;
 
         JsonDocument doc;
-        DeserializationError err = deserializeJson(doc, payload, DeserializationOption::Filter(filter));
+        // Beim Shelly klappt der Stream-Ansatz meist besser, um PSRAM nicht zu fluten
+        DeserializationError err = deserializeJson(doc, http.getStream(), DeserializationOption::Filter(filter));
         if (!err && !doc["total_act_power"].isNull()) {
             out.total    = doc["total_act_power"].as<float>();
             out.phase[0] = doc["a_act_power"] | NAN;
@@ -288,13 +290,11 @@ bool fetchShellyOnce(const char* ipAddress, int &httpCode, ShellyData &out) {
     } else if (httpCode > 0) {
         Serial.printf("HTTP-Code %d bei %s\n", httpCode, ipAddress);
     }
-    // httpCode <= 0 (Verbindungsfehler) wird in getShellyData() ausgewertet
 
     http.end();
     return ok;
 }
 
-// Abruf mit einem Wiederholversuch bei Verbindungsfehlern, inkl. Zeitmessung
 ShellyData getShellyData(const char* ipAddress) {
     ShellyData data;
     for (int attempt = 1; attempt <= 2; attempt++) {
@@ -303,20 +303,13 @@ ShellyData getShellyData(const char* ipAddress) {
         bool ok = fetchShellyOnce(ipAddress, httpCode, data);
         unsigned long dt = millis() - t0;
 
-        if (ok) {
-            if (attempt > 1) {
-                Serial.printf("%s: Erfolg bei Versuch %d (%lu ms)\n", ipAddress, attempt, dt);
-            }
-            return data;
-        }
-
+        if (ok) return data;
         Serial.printf("%s: Versuch %d fehlgeschlagen nach %lu ms (%s, Code %d)\n",
                       ipAddress, attempt, dt, HTTPClient::errorToString(httpCode).c_str(), httpCode);
-
-        if (httpCode > 0) break;   // Gerät hat geantwortet, Wiederholen bringt nichts
+        if (httpCode > 0) break;   
         delay(500);
     }
-    return ShellyData();   // alles NAN
+    return ShellyData();   
 }
 
 // ---------------------------------------------------------------
@@ -338,14 +331,12 @@ bool fetchTasmotaOnce(const char* ipAddress, int &httpCode, PvData &out) {
     bool ok = false;
 
     if (httpCode == HTTP_CODE_OK) {
+        // Tasmota antwortet mit extrem kurzem JSON, daher sicherer direkter String Download
         String payload = http.getString();
-
-        JsonDocument filter;
-        filter["StatusSNS"]["ENERGY"]["Power"] = true;
-        filter["StatusSNS"]["ENERGY"]["Today"] = true;
-
+        
         JsonDocument doc;
-        DeserializationError err = deserializeJson(doc, payload, DeserializationOption::Filter(filter));
+        DeserializationError err = deserializeJson(doc, payload);
+        
         JsonObject e = doc["StatusSNS"]["ENERGY"].as<JsonObject>();
         if (!err && !e.isNull() && !e["Power"].isNull()) {
             float p = e["Power"].as<float>();
@@ -372,16 +363,14 @@ PvData getTasmotaPv(const char* ipAddress) {
         unsigned long dt = millis() - t0;
 
         if (ok) return data;
-
         Serial.printf("%s: PV-Abruf Versuch %d fehlgeschlagen nach %lu ms (%s, Code %d)\n",
                       ipAddress, attempt, dt, HTTPClient::errorToString(httpCode).c_str(), httpCode);
         if (httpCode > 0) break;
         delay(500);
     }
-    return PvData();   // alles NAN
+    return PvData();   
 }
 
-// PV-Leistung aus der Phase des Shelly (negative Leistung = PV liefert)
 PvData pvFromPhase(const ShellyData &d, int phaseIdx) {
     PvData p;
     if (!isnan(d.total) && !isnan(d.phase[phaseIdx])) {
@@ -391,13 +380,8 @@ PvData pvFromPhase(const ShellyData &d, int phaseIdx) {
 }
 
 // ---------------------------------------------------------------
-// Statistik: Tageswerte, Speicherung, Tageswechsel
+// Statistik Logik
 // ---------------------------------------------------------------
-bool time_valid() {
-    return time(nullptr) > 1700000000L;   // Uhr wurde per NTP gestellt
-}
-
-// Tage seit 1970 für ein Datum (unabhängig von Zeitzonen)
 int32_t days_from_civil(int y, int m, int d) {
     y -= (m <= 2);
     const int era = (y >= 0 ? y : y - 399) / 400;
@@ -435,7 +419,6 @@ void stats_save(SiteStats &s) {
     Serial.printf("[%lu s] Tageswerte im Flash gespeichert (%s)\n", millis() / 1000, s.nvsKey);
 }
 
-// Tageswechsel: Einträge nach hinten schieben, neuen Tag beginnen
 void stats_roll(SiteStats &s, uint32_t todayKey) {
     if (s.st.day[0].date == todayKey) return;
 
@@ -446,32 +429,31 @@ void stats_roll(SiteStats &s, uint32_t todayKey) {
     }
 
     int diff = key_to_days(todayKey) - key_to_days(s.st.day[0].date);
-    if (diff <= 0) return;      // Uhr springt zurück: ignorieren
+    if (diff <= 0) return;      
     if (diff > 7) diff = 7;
 
     for (int i = 6; i >= diff; i--) s.st.day[i] = s.st.day[i - diff];
-    for (int i = 1; i < diff; i++)  s.st.day[i] = DayRec{ 0, 0.0f, 0.0f, 0.0f };   // Lücke (Gerät war aus)
+    for (int i = 1; i < diff; i++)  s.st.day[i] = DayRec{ 0, 0.0f, 0.0f, 0.0f };   
     s.st.day[0] = DayRec{ todayKey, 0.0f, 0.0f, 0.0f };
 
-    s.havePrevGrid = false;     // nicht über den Tageswechsel hinweg integrieren
+    s.havePrevGrid = false;     
     s.havePrevPv = false;
     stats_save(s);
 }
 
-// Neue Messwerte in die Tagesstatistik einrechnen
-void stats_update(SiteStats &s, const ShellyData &g, const PvData &pv) {
+void stats_update(SiteStats &s, const ShellyData &g, const PvData &pv, const char* tz) {
     if (!time_valid()) return;
-    struct tm ti;
-    if (!getLocalTime(&ti, 0)) return;
-
+    
+    // Berechne das lokale Datum für den korrekten Standort
+    struct tm ti = get_local_time(tz);
     uint32_t key = (uint32_t)(ti.tm_year + 1900) * 10000 + (uint32_t)(ti.tm_mon + 1) * 100 + (uint32_t)ti.tm_mday;
+    
     stats_roll(s, key);
 
     unsigned long now = millis();
     DayRec &d = s.st.day[0];
-    if (d.date != key) return;  // Uhr läuft rückwärts: nichts verbuchen
+    if (d.date != key) return;  
 
-    // --- Netz: Leistung über die Zeit aufsummieren (Bezug und Einspeisung getrennt) ---
     if (!isnan(g.total)) {
         float imp = g.total > 0 ? g.total : 0.0f;
         float exp = g.total < 0 ? -g.total : 0.0f;
@@ -489,7 +471,6 @@ void stats_update(SiteStats &s, const ShellyData &g, const PvData &pv) {
         s.havePrevGrid = true;
     }
 
-    // --- PV: Zähler-Tageswert (Tasmota) oder Leistung (Shelly-Phase) ---
     if (!isnan(pv.todayKWh)) {
         if (s.havePrevPv && (now - s.lastPvMs) <= STATS_MAX_GAP_S * 1000UL && pv.todayKWh >= s.lastToday) {
             d.pvWh += (pv.todayKWh - s.lastToday) * 1000.0f;
@@ -511,26 +492,22 @@ void stats_update(SiteStats &s, const ShellyData &g, const PvData &pv) {
         s.havePrevPv = true;
     }
 
-    // --- regelmäßig im Flash sichern ---
     if (s.dirty && (now - s.lastSaveMs) > STATS_SAVE_MS) {
         stats_save(s);
     }
 }
 
-// PV-Anteil am Verbrauch eines Tages in % (0..100) oder -1, wenn nicht berechenbar.
-// Verbrauch = Netzbezug + selbst genutzte PV (PV minus Einspeisung)
 int stats_share(const DayRec &d) {
     float self = d.pvWh - d.expWh;
     if (self < 0) self = 0;
     float consumption = d.impWh + self;
-    if (consumption < 5.0f) return -1;    // noch zu wenig Daten
+    if (consumption < 5.0f) return -1;    
     int p = (int)lroundf(self / consumption * 100.0f);
     if (p < 0) p = 0;
     if (p > 100) p = 100;
     return p;
 }
 
-// Wh -> "1,23" (kWh mit 2 Nachkommastellen), ab 10 kWh "12,3"
 void fmt_kwh(char * buf, size_t n, float wh) {
     if (wh < 0) wh = 0;
     if (wh >= 10000.0f) {
@@ -545,8 +522,6 @@ void fmt_kwh(char * buf, size_t n, float wh) {
 // ---------------------------------------------------------------
 // UI-Hilfsfunktionen
 // ---------------------------------------------------------------
-
-// Macht aus einem Standard-Objekt ein "leeres" Layout-Element (ohne Rahmen, Hintergrund, Scrollbalken)
 void make_plain(lv_obj_t * o) {
     lv_obj_set_style_bg_opa(o, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(o, 0, 0);
@@ -564,8 +539,6 @@ lv_obj_t * make_label(lv_obj_t * parent, const char * text, const lv_font_t * fo
     return l;
 }
 
-// Setzt Text, Farbe oder Balkenwert nur, wenn sich etwas geändert hat.
-// Jedes Neuzeichnen kostet PSRAM-Zugriffe, die dem Display fehlen können.
 void set_text(lv_obj_t * l, const char * txt) {
     if (strcmp(lv_label_get_text(l), txt) != 0) lv_label_set_text(l, txt);
 }
@@ -584,7 +557,6 @@ void set_bar(lv_obj_t * bar, int v) {
     if (lv_bar_get_value(bar) != v) lv_bar_set_value(bar, v, LV_ANIM_OFF);
 }
 
-// Kleine Sonne aus einem Kreis und 8 Strahlen (32 x 32 Pixel)
 void create_sun_icon(lv_obj_t * parent, int x, int y) {
     static lv_point_t rays[8][2];
     static bool init = false;
@@ -622,7 +594,6 @@ void create_sun_icon(lv_obj_t * parent, int x, int y) {
     }
 }
 
-// Baut eine komplette Karte auf
 void create_card(Card &c, int x, const char * title) {
     lv_obj_t * card = lv_obj_create(lv_scr_act());
     lv_obj_set_size(card, CARD_W, CARD_H);
@@ -640,7 +611,6 @@ void create_card(Card &c, int x, const char * title) {
     lv_obj_set_style_pad_all(card, CARD_PAD, 0);
     lv_obj_clear_flag(card, LV_OBJ_FLAG_SCROLLABLE);
 
-    // --- Kopfzeile: Haus-Symbol, Ortsname, Status-Punkt ---
     lv_obj_t * icon = lv_obj_create(card);
     make_plain(icon);
     lv_obj_set_size(icon, 40, 40);
@@ -664,11 +634,9 @@ void create_card(Card &c, int x, const char * title) {
     lv_obj_set_style_bg_opa(c.dot, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(c.dot, lv_color_hex(COL_OFF), 0);
 
-    // --- Große Zahl und Beschriftung ---
     c.value   = make_label(card, "-- W", FONT_BIG, COL_MUTED, 0, 52);
     c.caption = make_label(card, "Lade...", FONT_MED, COL_MUTED, 0, 112);
 
-    // --- PV-Zeile und aktueller Netz/PV-Balken ---
     create_sun_icon(card, 0, 150);
     c.pvValue = make_label(card, "PV -- W", FONT_MED, COL_MUTED, 44, 152);
 
@@ -680,14 +648,13 @@ void create_card(Card &c, int x, const char * title) {
     lv_obj_set_style_radius(c.bar, 7, LV_PART_MAIN);
     lv_obj_set_style_radius(c.bar, 7, LV_PART_INDICATOR);
     lv_obj_set_style_bg_opa(c.bar, LV_OPA_COVER, LV_PART_MAIN);
-    lv_obj_set_style_bg_color(c.bar, lv_color_hex(COL_OFF), LV_PART_MAIN);        // Hintergrund = Netz-Anteil
-    lv_obj_set_style_bg_color(c.bar, lv_color_hex(COL_GREEN), LV_PART_INDICATOR); // Balken = PV-Anteil
+    lv_obj_set_style_bg_color(c.bar, lv_color_hex(COL_OFF), LV_PART_MAIN);        
+    lv_obj_set_style_bg_color(c.bar, lv_color_hex(COL_GREEN), LV_PART_INDICATOR); 
 
     c.barLeft  = make_label(card, "Netz -- %", FONT_MED, COL_MUTED, 0, 216);
     c.barRight = make_label(card, "PV -- %", FONT_MED, COL_MUTED, 0, 216);
     lv_obj_align(c.barRight, LV_ALIGN_TOP_RIGHT, 0, 216);
 
-    // --- Tageswerte ---
     c.lblToday = make_label(card, "Heute", FONT_MED, COL_MUTED, 0, 254);
     c.lblShare = make_label(card, "PV-Anteil -- %", FONT_MED, COL_GREEN, 0, 254);
     lv_obj_align(c.lblShare, LV_ALIGN_TOP_RIGHT, 0, 254);
@@ -696,7 +663,6 @@ void create_card(Card &c, int x, const char * title) {
     c.lblGridKwh = make_label(card, "Netz -,-- kWh", FONT_MED, COL_BLUE, 0, 284);
     lv_obj_align(c.lblGridKwh, LV_ALIGN_TOP_RIGHT, 0, 284);
 
-    // --- 7-Tage-Balken: PV-Anteil je Tag (links ältester Tag, rechts heute) ---
     const int colW = CONTENT_W / 7;
     for (int i = 0; i < 7; i++) {
         lv_obj_t * b = lv_bar_create(card);
@@ -718,6 +684,18 @@ void create_card(Card &c, int x, const char * title) {
     }
 }
 
+// Callback für den Kippschalter (Toggle)
+void btn_sleep_cb(lv_event_t * e) {
+    lv_obj_t * btn = lv_event_get_target(e);
+    if(lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+        // Schalter aktiviert (Schwarz) -> Standby blockieren
+        autoStandbyActive = false; 
+    } else {
+        // Schalter deaktiviert (Blaugrau) -> Standby wieder erlauben
+        autoStandbyActive = true;  
+    }
+}
+
 void build_dashboard() {
     lv_obj_set_style_bg_color(lv_scr_act(), lv_color_hex(COL_BG), 0);
     lv_obj_set_style_bg_opa(lv_scr_act(), LV_OPA_COVER, 0);
@@ -725,11 +703,37 @@ void build_dashboard() {
 
     create_card(cardEmmering, 12, "Emmering");
     create_card(cardCincu, 412, "Cincu");
+
+    // Standby Toggle-Button unten mittig platzieren
+    lv_obj_t * btn_sleep = lv_btn_create(lv_scr_act());
+    lv_obj_set_size(btn_sleep, 60, 60); 
+    lv_obj_align(btn_sleep, LV_ALIGN_BOTTOM_MID, 0, -10);
+    lv_obj_set_style_radius(btn_sleep, 15, 0); 
+    
+    // Normaler Zustand (Standby ERLAUBT)
+    lv_obj_set_style_bg_color(btn_sleep, lv_color_hex(COL_ICONBG), (lv_style_selector_t)(LV_PART_MAIN | LV_STATE_DEFAULT));
+    
+    // Gedrückter Zustand (Standby BLOCKIERT)
+    lv_obj_set_style_bg_color(btn_sleep, lv_color_hex(0x000000), (lv_style_selector_t)(LV_PART_MAIN | LV_STATE_CHECKED));
+    
+    lv_obj_set_style_border_width(btn_sleep, 2, 0);
+    lv_obj_set_style_border_color(btn_sleep, lv_color_hex(COL_BORDER), 0);
+    
+    // Macht den Button zum Kippschalter
+    lv_obj_add_flag(btn_sleep, LV_OBJ_FLAG_CHECKABLE);
+
+    lv_obj_t * lbl_sleep = lv_label_create(btn_sleep);
+    lv_label_set_text(lbl_sleep, "Z..z");
+    lv_obj_set_style_text_font(lbl_sleep, FONT_MED, 0);
+    lv_obj_set_style_text_color(lbl_sleep, lv_color_hex(COL_TEXT), 0);
+    lv_obj_center(lbl_sleep);
+    
+    // Reagiert auf Veränderung des Zustands
+    lv_obj_add_event_cb(btn_sleep, btn_sleep_cb, LV_EVENT_VALUE_CHANGED, NULL);
 }
 
-// Aktualisiert die Live-Werte einer Karte (offlineText wird bei fehlenden Shelly-Daten angezeigt)
 void update_card(Card &c, const ShellyData &d, const PvData &pvd, const char * offlineText) {
-    if (c.value == NULL) return;   // Display aus
+    if (c.value == NULL) return;   
 
     char buf[48];
     const bool  ok   = !isnan(d.total);
@@ -739,7 +743,6 @@ void update_card(Card &c, const ShellyData &d, const PvData &pvd, const char * o
 
     set_bg_color(c.dot, ok ? COL_GREEN : COL_OFF, LV_PART_MAIN);
 
-    // --- Netzbezug ---
     if (ok) {
         const int g = (int)lroundf(grid);
         snprintf(buf, sizeof(buf), "%d W", g);
@@ -757,7 +760,6 @@ void update_card(Card &c, const ShellyData &d, const PvData &pvd, const char * o
         set_text(c.caption, offlineText);
     }
 
-    // --- aktuelle PV-Leistung ---
     if (pvOk) {
         const int pvInt = (int)lroundf(pv);
         snprintf(buf, sizeof(buf), "PV %d W", pvInt);
@@ -768,7 +770,6 @@ void update_card(Card &c, const ShellyData &d, const PvData &pvd, const char * o
         set_text_color(c.pvValue, COL_MUTED);
     }
 
-    // --- Balken: aktueller Anteil von PV am Verbrauch (Netzbezug + PV) ---
     float consumption = (grid > 0 ? grid : 0.0f) + pv;
     if (ok && pvOk && consumption >= 1.0f) {
         int share = (int)roundf(pv / consumption * 100.0f);
@@ -790,9 +791,8 @@ void update_card(Card &c, const ShellyData &d, const PvData &pvd, const char * o
     }
 }
 
-// Aktualisiert Tageswerte und 7-Tage-Balken einer Karte
-void update_stats_ui(Card &c, const SiteStats &s) {
-    if (c.lblPvKwh == NULL) return;   // Display aus
+void update_stats_ui(Card &c, const SiteStats &s, const char* tz) {
+    if (c.lblPvKwh == NULL) return;   
 
     char buf[48], b1[12], b2[12];
     const DayRec &t = s.st.day[0];
@@ -811,11 +811,14 @@ void update_stats_ui(Card &c, const SiteStats &s) {
         set_text(c.lblShare, "PV-Anteil -- %");
     }
 
+    bool haveTime = time_valid();
     struct tm ti;
-    bool haveTime = time_valid() && getLocalTime(&ti, 0);
+    if (haveTime) {
+        ti = get_local_time(tz);
+    }
 
     for (int i = 0; i < 7; i++) {
-        int ago = 6 - i;   // i = 6 ist heute
+        int ago = 6 - i;   
         const DayRec &d = s.st.day[ago];
         int sh = (d.date != 0) ? stats_share(d) : -1;
         set_bar(c.dayBar[i], sh < 0 ? 0 : sh);
@@ -827,15 +830,31 @@ void update_stats_ui(Card &c, const SiteStats &s) {
     }
 }
 
-// Touchscreen an LVGL anbinden
+// Eleganter LVGL-Touch-Treiber mit Aufwach-Sperre und Y-Invertierung
 void my_touchpad_read(lv_indev_drv_t * indev_driver, lv_indev_data_t * data) {
     ts.read();
+    static bool blockTouch = false; // Verhindert Klicks im Moment des Aufweckens
+
     if (ts.isTouched) {
-        data->state = LV_INDEV_STATE_PR;
-        data->point.x = ts.points[0].x;
-        data->point.y = ts.points[0].y;
+        if (!isScreenOn) {
+            // Bildschirm war schwarz: Nur Licht an, Klick blockieren
+            blockTouch = true;
+            lv_disp_trig_activity(NULL); 
+        }
+        
+        if (!blockTouch) {
+            data->state = LV_INDEV_STATE_PR;
+            data->point.x = ts.points[0].x;
+            
+            // --- HIER IST DIE KORREKTUR: Y-Achse umdrehen ---
+            data->point.y = screenHeight - ts.points[0].y; 
+            
+        } else {
+            data->state = LV_INDEV_STATE_REL;
+        }
     } else {
         data->state = LV_INDEV_STATE_REL;
+        blockTouch = false; // Reset sobald der Finger vom Glas genommen wird
     }
 }
 
@@ -845,15 +864,13 @@ void setup() {
 #if !TEST_NO_WIFI
     connectWifi();
 
-    // Uhrzeit per NTP holen (für den Tageswechsel der Statistik)
-    configTzTime(TIMEZONE_TZ, NTP_SERVER_1, NTP_SERVER_2);
+    // Zentrale Systemzeit synchronisieren (Standard: Emmering)
+    configTzTime(TZ_EMMERING, NTP_SERVER_1, NTP_SERVER_2);
 #endif
 
-    // gespeicherte Tageswerte laden
     stats_load(statsEmmering, "emm");
     stats_load(statsCincu, "cin");
 
-    // Expander nativ starten
     expander->init();
     expander->begin();
     expander->multiPinMode(TP_RST, OUTPUT);
@@ -865,16 +882,15 @@ void setup() {
     expander->multiDigitalWrite(LCD_BL, HIGH);
 
 #if USE_DISPLAY
-    initDisplay();       // ruft gfx->begin() selbst auf, nicht nochmal aufrufen!
+    initDisplay();       
     build_dashboard();
-    update_stats_ui(cardEmmering, statsEmmering);
-    update_stats_ui(cardCincu, statsCincu);
+    update_stats_ui(cardEmmering, statsEmmering, TZ_EMMERING);
+    update_stats_ui(cardCincu, statsCincu, TZ_CINCU);
 #if !ENABLE_EMMERING
     update_card(cardEmmering, ShellyData(), PvData(), "Abgeschaltet");
 #endif
 
 #if !TEST_NO_TOUCH
-    // Touchscreen starten und bei LVGL anmelden
     ts.begin();
     ts.setRotation(ROTATION_NORMAL);
     static lv_indev_drv_t indev_drv;
@@ -889,7 +905,6 @@ void setup() {
 void loop() {
 #if USE_DISPLAY
 #if !LV_TICK_CUSTOM
-    // LVGL braucht einen Zeitgeber, sonst werden Änderungen nie neu gezeichnet.
     static unsigned long lastTick = 0;
     unsigned long nowTick = millis();
     lv_tick_inc(nowTick - lastTick);
@@ -900,13 +915,18 @@ void loop() {
     delay(5);
 
 #if USE_DISPLAY
-    // --- Auto-Standby: Beleuchtung nach STANDBY_MS ohne Berührung aus, bei Berührung wieder an ---
-    static bool isScreenOn = true;
+    // --- Erweiterte Auto-Standby Logik ---
     uint32_t inactive_time = lv_disp_get_inactive_time(NULL);
-    if (inactive_time > STANDBY_MS && isScreenOn) {
+    
+    // Display darf an sein, wenn es extern erlaubt ist (displayEnabled) 
+    // UND (der Button den Standby blockiert ODER die 5 Minuten noch nicht um sind)
+    bool shouldBeOn = displayEnabled && (!autoStandbyActive || inactive_time <= STANDBY_MS);
+
+    if (!shouldBeOn && isScreenOn) {
         expander->multiDigitalWrite(LCD_BL, LOW);
         isScreenOn = false;
-    } else if (inactive_time <= STANDBY_MS && !isScreenOn) {
+    } 
+    else if (shouldBeOn && !isScreenOn) {
         expander->multiDigitalWrite(LCD_BL, HIGH);
         isScreenOn = true;
     }
@@ -922,13 +942,12 @@ void loop() {
             PvData pvEmmering = ipPvEmmering ? getTasmotaPv(ipPvEmmering)
                                              : pvFromPhase(emmering, PV_PHASE_EMMERING);
             update_card(cardEmmering, emmering, pvEmmering, "Keine Daten");
-            stats_update(statsEmmering, emmering, pvEmmering);
+            stats_update(statsEmmering, emmering, pvEmmering, TZ_EMMERING);
             Serial.printf("Emmering: Netz %.1f W, PV %.1f W | heute PV %.0f Wh, Netz %.0f Wh\n",
                           emmering.total, pvEmmering.power,
                           statsEmmering.st.day[0].pvWh, statsEmmering.st.day[0].impWh);
 #endif
 #if TEST_MODE == 2
-            // Test: keine Netzwerkabfrage, Anzeige mit wechselnden Testwerten
             static int testCount = 0;
             testCount++;
             ShellyData cincu;
@@ -944,7 +963,8 @@ void loop() {
             update_card(cardCincu, cincu, pvCincu, "Keine Daten");
 #endif
 #if TEST_MODE != 2
-            stats_update(statsCincu, cincu, pvCincu);
+            // Zeitzone für Cincu beim Tageswechsel übergeben
+            stats_update(statsCincu, cincu, pvCincu, TZ_CINCU);
 #endif
 
             Serial.printf("RSSI: %d dBm | Cincu: Netz %.1f W, PV %.1f W | heute PV %.1f Wh, Netz %.1f Wh, Einsp. %.1f Wh%s\n",
@@ -956,11 +976,9 @@ void loop() {
             WiFi.reconnect();
         }
 
-        // Tageswerte und Wochentage immer aktualisieren (auch für Emmering, wenn abgeschaltet,
-        // sonst bleiben dort die Wochentage auf "--", bis die Uhr gestellt ist)
 #if TEST_MODE != 1
-        update_stats_ui(cardEmmering, statsEmmering);
-        update_stats_ui(cardCincu, statsCincu);
+        update_stats_ui(cardEmmering, statsEmmering, TZ_EMMERING);
+        update_stats_ui(cardCincu, statsCincu, TZ_CINCU);
 #endif
     }
 #endif
